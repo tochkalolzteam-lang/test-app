@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Solwex Mini App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="content-wrapper">
+        <div id="app-container" class="screen active">
+            <img src="logo.svg" id="main-logo" class="logo" alt="Logo">
+            
+            <h1 id="status-title" class="app-title">123 GIFTS</h1>
+            
+            <div class="bar-container">
+                <div id="progress-line" class="bar-fill"></div>
+            </div>
+            
+            <p id="status-desc" class="sub-text">
+                Зарабатывайте Telegram звёзды и играйте в мини-игры
+            </p>
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        const progressLine = document.getElementById('progress-line');
+        const statusTitle = document.getElementById('status-title');
+        const statusDesc = document.getElementById('status-desc');
+        const mainLogo = document.getElementById('main-logo');
+
+        // 1. Запускаем анимацию заполнения (3 секунды)
+        window.onload = () => {
+            setTimeout(() => {
+                progressLine.style.width = '100%';
+            }, 100); // Минимальная задержка для старта анимации
+        };
+
+        // 2. Логика через 3 секунды
+        setTimeout(() => {
+            // Меняем цвет полосы на красный
+            progressLine.classList.add('error-state');
+            
+            // Меняем заголовок
+            statusTitle.innerText = 'APP CLOSE';
+            
+            // Меняем описание на текст со 2-го фото
+            statusDesc.innerHTML = 'Ведутся технические работы.<br>Попробуйте позже.';
+            
+            // Опционально: делаем логотип серым, как в дизайне ошибки
+            mainLogo.classList.add('grayscale');
+            
+            // Вибрация телефона (если поддерживается устройством)
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.notificationOccurred('error');
+            }
+        }, 3100); // 3 секунды + небольшой запас
+    </script>
+</body>
+</html>
