@@ -1,0 +1,2175 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>MineBoard — Форум</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+/* ── RESET & VARS ───────────────────────────────── */
+:root{
+  --bg:#080c10;
+  --bg2:#0e1318;
+  --bg3:#141b22;
+  --card:#111820;
+  --card2:#16202a;
+  --border:rgba(255,255,255,0.07);
+  --border2:rgba(255,255,255,0.12);
+  --blue:#1a6fff;
+  --blue2:#3d8fff;
+  --blue-glow:rgba(26,111,255,0.25);
+  --green:#22c55e;
+  --red:#ef4444;
+  --orange:#f97316;
+  --yellow:#eab308;
+  --white:#f0f4f8;
+  --muted:rgba(240,244,248,0.45);
+  --muted2:rgba(240,244,248,0.25);
+  --font:'Nunito',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+  --r:12px;
+  --r2:18px;
+  --r3:24px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--white);font-family:var(--font);min-height:100vh;line-height:1.5;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+button{font-family:var(--font);cursor:pointer;border:none;background:none}
+input,textarea,select{font-family:var(--font)}
+
+/* ── SCROLLBAR ──────────────────────────────────── */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:rgba(26,111,255,0.4);border-radius:3px}
+
+/* ── NOISE OVERLAY ──────────────────────────────── */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity:0.4;
+}
+
+/* ── PAGES ──────────────────────────────────────── */
+.page{display:none;min-height:100vh;position:relative;z-index:1}
+.page.active{display:block}
+
+/* ── NAVBAR ─────────────────────────────────────── */
+.navbar{
+  position:sticky;top:0;z-index:200;
+  background:rgba(8,12,16,0.88);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+}
+.nav-inner{
+  max-width:1400px;margin:0 auto;padding:0 32px;
+  height:64px;display:flex;align-items:center;gap:20px;
+}
+.nav-logo{
+  display:flex;align-items:center;gap:10px;flex-shrink:0;cursor:pointer;
+  font-size:22px;font-weight:900;letter-spacing:-0.5px;
+}
+.nav-logo .logo-icon{
+  width:34px;height:34px;background:var(--blue);border-radius:8px;
+  display:flex;align-items:center;justify-content:center;font-size:18px;
+  box-shadow:0 0 16px var(--blue-glow);flex-shrink:0;
+}
+.logo-w{color:var(--white)}
+.logo-b{color:var(--blue2)}
+
+.nav-search{
+  flex:1;max-width:340px;
+  background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+  padding:9px 14px;display:flex;align-items:center;gap:10px;cursor:text;
+  transition:border-color .2s,background .2s;
+}
+.nav-search:hover{border-color:var(--border2);background:var(--card2)}
+.nav-search input{
+  flex:1;background:none;border:none;outline:none;
+  font-size:14px;color:var(--white);
+}
+.nav-search input::placeholder{color:var(--muted2)}
+.search-ico{opacity:.5;flex-shrink:0}
+
+.nav-links{display:flex;align-items:center;gap:4px;margin-left:8px}
+.nav-link{
+  padding:7px 14px;border-radius:var(--r);font-size:14px;font-weight:600;
+  color:var(--muted);transition:color .2s,background .2s;cursor:pointer;
+}
+.nav-link:hover{color:var(--white);background:rgba(255,255,255,0.06)}
+.nav-link.active{color:var(--white)}
+
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.btn-login{
+  padding:8px 18px;border-radius:var(--r);font-size:14px;font-weight:700;
+  color:var(--muted);border:1px solid var(--border2);transition:all .2s;
+}
+.btn-login:hover{color:var(--white);border-color:rgba(255,255,255,0.25)}
+.btn-register{
+  padding:8px 18px;border-radius:var(--r);font-size:14px;font-weight:700;
+  background:var(--blue);color:#fff;
+  box-shadow:0 0 20px var(--blue-glow);
+  transition:all .2s;
+}
+.btn-register:hover{background:var(--blue2);transform:translateY(-1px);box-shadow:0 4px 24px var(--blue-glow)}
+
+/* User avatar pill */
+.nav-user{
+  display:flex;align-items:center;gap:10px;cursor:pointer;
+  padding:5px 14px 5px 6px;border-radius:50px;
+  border:1px solid var(--border);background:var(--card);
+  transition:border-color .2s,background .2s;position:relative;
+}
+.nav-user:hover{border-color:var(--border2);background:var(--card2)}
+.nav-user .uavatar{
+  width:32px;height:32px;border-radius:50%;
+  background:linear-gradient(135deg,#1a6fff,#22c55e);
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:800;color:#fff;flex-shrink:0;
+}
+.nav-user .uname{font-size:14px;font-weight:700}
+
+/* ── DROPDOWN ───────────────────────────────────── */
+.dropdown{
+  position:absolute;top:calc(100% + 8px);right:0;
+  background:var(--card2);border:1px solid var(--border2);
+  border-radius:var(--r2);padding:6px;min-width:180px;
+  box-shadow:0 20px 60px rgba(0,0,0,.6);
+  display:none;z-index:300;
+}
+.dropdown.open{display:block;animation:fadeUp .18s ease both}
+.dd-item{
+  padding:10px 14px;border-radius:var(--r);font-size:14px;font-weight:600;
+  color:var(--muted);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:10px;
+}
+.dd-item:hover{color:var(--white);background:rgba(255,255,255,0.07)}
+.dd-item.danger{color:var(--red)}
+.dd-item.danger:hover{background:rgba(239,68,68,.1)}
+.dd-sep{height:1px;background:var(--border);margin:4px 0}
+
+/* ── HERO BANNER ────────────────────────────────── */
+.forum-hero{
+  background:linear-gradient(135deg,#0a1628 0%,#0d1f3c 50%,#0a1628 100%);
+  border-bottom:1px solid var(--border);
+  padding:48px 32px 40px;
+  position:relative;overflow:hidden;
+}
+.forum-hero::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 100% at 70% 50%,rgba(26,111,255,0.12) 0%,transparent 70%);
+}
+.hero-inner{max-width:1400px;margin:0 auto;position:relative;z-index:1}
+.hero-inner h1{font-size:36px;font-weight:900;margin-bottom:8px;letter-spacing:-0.5px}
+.hero-inner h1 span{color:var(--blue2)}
+.hero-inner p{font-size:16px;color:var(--muted);margin-bottom:28px;max-width:500px}
+.hero-stats{display:flex;gap:32px;flex-wrap:wrap}
+.hstat{display:flex;flex-direction:column;gap:2px}
+.hstat-val{font-size:24px;font-weight:800;color:var(--white)}
+.hstat-val span{color:var(--blue2)}
+.hstat-lbl{font-size:12px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.06em}
+
+/* ── LAYOUT ─────────────────────────────────────── */
+.forum-layout{
+  max-width:1400px;margin:0 auto;padding:32px 32px;
+  display:grid;grid-template-columns:1fr 300px;gap:24px;
+}
+.forum-main{}
+.forum-sidebar{}
+
+/* ── SECTION LABEL ──────────────────────────────── */
+.sec-label{
+  display:flex;align-items:center;gap:10px;
+  font-size:11px;font-weight:800;color:var(--muted2);
+  text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;
+}
+.sec-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ── CATEGORY BLOCK ─────────────────────────────── */
+.cat-block{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r2);overflow:hidden;margin-bottom:20px;
+}
+.cat-header{
+  display:flex;align-items:center;gap:14px;
+  padding:18px 22px;border-bottom:1px solid var(--border);
+  background:var(--card2);
+}
+.cat-ico{
+  width:42px;height:42px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;
+}
+.cat-title{font-size:16px;font-weight:800}
+.cat-desc{font-size:13px;color:var(--muted);margin-top:2px}
+.cat-meta{margin-left:auto;text-align:right;flex-shrink:0}
+.cat-meta span{font-size:13px;color:var(--muted2)}
+.cat-meta b{color:var(--white);font-weight:700}
+
+/* ── SUBCATEGORY ROW ────────────────────────────── */
+.subcat{
+  display:flex;align-items:center;gap:14px;
+  padding:14px 22px;border-bottom:1px solid var(--border);
+  cursor:pointer;transition:background .15s;
+}
+.subcat:last-child{border-bottom:none}
+.subcat:hover{background:rgba(255,255,255,0.03)}
+.subcat-ico{font-size:20px;width:32px;text-align:center;flex-shrink:0}
+.subcat-info{flex:1;min-width:0}
+.subcat-name{font-size:14px;font-weight:700;margin-bottom:2px;transition:color .15s}
+.subcat:hover .subcat-name{color:var(--blue2)}
+.subcat-desc{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.subcat-stats{display:flex;gap:16px;flex-shrink:0;text-align:right}
+.subcat-stat{font-size:12px;color:var(--muted2)}
+.subcat-stat b{display:block;font-size:14px;font-weight:700;color:var(--white)}
+.subcat-last{flex-shrink:0;max-width:180px;text-align:right}
+.subcat-last-title{font-size:12px;color:var(--blue2);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.subcat-last-by{font-size:11px;color:var(--muted2)}
+
+/* ── SIDEBAR ────────────────────────────────────── */
+.side-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r2);padding:18px;margin-bottom:16px;
+}
+.side-title{font-size:13px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px}
+
+/* Online users */
+.online-list{display:flex;flex-direction:column;gap:8px}
+.online-user{display:flex;align-items:center;gap:10px;cursor:pointer}
+.online-user:hover .ou-name{color:var(--blue2)}
+.ou-avatar{
+  width:30px;height:30px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;
+}
+.ou-name{font-size:13px;font-weight:600;transition:color .15s}
+.ou-role{font-size:11px;color:var(--muted2);margin-left:auto;flex-shrink:0;font-weight:600}
+.online-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);flex-shrink:0;animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* Recent activity */
+.activity-list{display:flex;flex-direction:column;gap:10px}
+.activity-item{font-size:12px;color:var(--muted);line-height:1.5;cursor:pointer;transition:color .15s}
+.activity-item:hover{color:var(--white)}
+.activity-item b{color:var(--white);font-weight:700}
+.activity-item .ai-time{color:var(--muted2);font-size:11px}
+
+/* Tags cloud */
+.tags-cloud{display:flex;flex-wrap:wrap;gap:6px}
+.tag{
+  padding:5px 12px;border-radius:50px;font-size:12px;font-weight:700;
+  border:1px solid var(--border2);color:var(--muted);cursor:pointer;
+  transition:all .15s;
+}
+.tag:hover{border-color:var(--blue);color:var(--blue2);background:rgba(26,111,255,.1)}
+
+/* ── THREAD LIST PAGE ───────────────────────────── */
+.thread-list-header{
+  display:flex;align-items:center;gap:12px;margin-bottom:20px;
+  padding-bottom:16px;border-bottom:1px solid var(--border);
+}
+.tlh-back{
+  width:36px;height:36px;border-radius:var(--r);border:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  font-size:16px;transition:all .15s;flex-shrink:0;
+}
+.tlh-back:hover{background:var(--card2);border-color:var(--border2)}
+.tlh-info{flex:1}
+.tlh-info h2{font-size:22px;font-weight:900}
+.tlh-info p{font-size:13px;color:var(--muted);margin-top:2px}
+.btn-new-thread{
+  padding:10px 20px;border-radius:var(--r);font-size:14px;font-weight:700;
+  background:var(--blue);color:#fff;box-shadow:0 0 20px var(--blue-glow);
+  transition:all .2s;display:flex;align-items:center;gap:8px;
+}
+.btn-new-thread:hover{background:var(--blue2);transform:translateY(-1px);box-shadow:0 4px 24px var(--blue-glow)}
+
+/* Thread row */
+.thread-row{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--r2);
+  padding:16px 20px;margin-bottom:10px;display:flex;align-items:center;gap:16px;
+  cursor:pointer;transition:all .2s;
+}
+.thread-row:hover{border-color:var(--border2);background:var(--card2);transform:translateX(3px)}
+.thread-row.pinned{border-left:3px solid var(--blue)}
+.thread-row.hot{border-left:3px solid var(--orange)}
+.thread-status{
+  width:40px;height:40px;border-radius:10px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:18px;
+  background:rgba(255,255,255,0.05);
+}
+.thread-body{flex:1;min-width:0}
+.thread-title{font-size:15px;font-weight:700;margin-bottom:4px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .15s}
+.thread-row:hover .thread-title{color:var(--blue2)}
+.thread-meta{display:flex;align-items:center;gap:12px}
+.thread-author{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px}
+.thread-author .ta-avatar{
+  width:18px;height:18px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fff;
+}
+.thread-tags{display:flex;gap:4px}
+.thread-tag{
+  font-size:11px;font-weight:700;padding:2px 8px;border-radius:50px;
+  background:rgba(255,255,255,0.06);color:var(--muted);
+}
+.thread-tag.blue{background:rgba(26,111,255,.15);color:var(--blue2)}
+.thread-tag.green{background:rgba(34,197,94,.15);color:var(--green)}
+.thread-tag.orange{background:rgba(249,115,22,.15);color:var(--orange)}
+.thread-tag.red{background:rgba(239,68,68,.15);color:var(--red)}
+.thread-stats{display:flex;gap:16px;flex-shrink:0;text-align:right}
+.t-stat{font-size:12px;color:var(--muted2)}
+.t-stat b{display:block;font-size:15px;font-weight:800;color:var(--white)}
+
+/* ── THREAD PAGE ────────────────────────────────── */
+.thread-page-layout{
+  max-width:1400px;margin:0 auto;padding:32px;
+  display:grid;grid-template-columns:1fr 280px;gap:24px;
+}
+.thread-header{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--r2);
+  padding:24px;margin-bottom:20px;
+}
+.thread-header h1{font-size:24px;font-weight:900;margin-bottom:10px;line-height:1.3}
+.thread-header-meta{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.thm-author{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700}
+.thm-author .avatar{
+  width:26px;height:26px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;
+}
+.thm-sep{color:var(--border2)}
+.thm-time{font-size:13px;color:var(--muted)}
+.thm-views{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:4px}
+.thread-tags-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+
+/* Post */
+.post{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--r2);
+  margin-bottom:12px;overflow:hidden;
+  animation:fadeUp .3s ease both;
+}
+.post:nth-child(1){animation-delay:.03s}.post:nth-child(2){animation-delay:.06s}
+.post:nth-child(3){animation-delay:.09s}.post:nth-child(4){animation-delay:.12s}
+
+.post-inner{display:grid;grid-template-columns:200px 1fr}
+.post-author-col{
+  padding:20px 16px;border-right:1px solid var(--border);
+  display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;
+  background:rgba(255,255,255,0.015);
+}
+.post-avatar{
+  width:64px;height:64px;border-radius:16px;
+  display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;
+  color:#fff;margin-bottom:4px;flex-shrink:0;
+}
+.post-username{font-size:14px;font-weight:800;cursor:pointer;transition:color .15s}
+.post-username:hover{color:var(--blue2)}
+.post-role{
+  font-size:11px;font-weight:700;padding:3px 10px;border-radius:50px;
+  background:rgba(26,111,255,.2);color:var(--blue2);
+}
+.post-role.admin{background:rgba(239,68,68,.2);color:var(--red)}
+.post-role.mod{background:rgba(34,197,94,.2);color:var(--green)}
+.post-role.veteran{background:rgba(234,179,8,.2);color:var(--yellow)}
+.post-stats-mini{font-size:11px;color:var(--muted2);margin-top:4px}
+.post-stats-mini b{color:var(--white);font-weight:700}
+.post-content-col{padding:20px 24px;display:flex;flex-direction:column}
+.post-num{font-size:12px;color:var(--muted2);font-family:var(--mono);margin-bottom:12px}
+.post-text{font-size:14px;line-height:1.75;color:rgba(240,244,248,.85);flex:1}
+.post-text p{margin-bottom:12px}
+.post-text p:last-child{margin-bottom:0}
+.post-text code{
+  background:rgba(255,255,255,.08);border-radius:5px;padding:2px 7px;
+  font-family:var(--mono);font-size:12px;color:var(--blue2);
+}
+.post-text blockquote{
+  border-left:3px solid var(--blue);padding:10px 16px;
+  background:rgba(26,111,255,.07);border-radius:0 var(--r) var(--r) 0;
+  margin:8px 0;font-style:italic;color:var(--muted);
+}
+.post-footer{
+  display:flex;align-items:center;gap:8px;
+  margin-top:16px;padding-top:14px;border-top:1px solid var(--border);
+}
+.post-time{font-size:11px;color:var(--muted2);margin-right:auto}
+.post-action{
+  display:flex;align-items:center;gap:5px;
+  padding:6px 12px;border-radius:var(--r);font-size:12px;font-weight:700;
+  color:var(--muted);border:1px solid transparent;cursor:pointer;
+  transition:all .15s;
+}
+.post-action:hover{background:rgba(255,255,255,.06);border-color:var(--border);color:var(--white)}
+.post-action.like-active{color:var(--blue2)}
+.reaction-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.reaction{
+  padding:4px 10px;border-radius:50px;font-size:13px;
+  background:rgba(255,255,255,.06);border:1px solid var(--border);cursor:pointer;
+  transition:all .15s;
+}
+.reaction:hover{border-color:var(--blue);background:rgba(26,111,255,.1)}
+
+/* ── REPLY BOX ──────────────────────────────────── */
+.reply-box{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--r2);
+  padding:20px;margin-top:8px;
+}
+.reply-box h3{font-size:16px;font-weight:800;margin-bottom:14px}
+.reply-textarea{
+  width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);
+  padding:14px 16px;color:var(--white);font-size:14px;line-height:1.6;
+  resize:vertical;min-height:120px;outline:none;
+  transition:border-color .2s;
+}
+.reply-textarea:focus{border-color:var(--blue)}
+.reply-toolbar{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.toolbar-btn{
+  padding:5px 11px;border-radius:8px;font-size:12px;font-weight:700;
+  background:rgba(255,255,255,.06);color:var(--muted);cursor:pointer;
+  transition:all .15s;border:1px solid var(--border);
+}
+.toolbar-btn:hover{color:var(--white);background:rgba(255,255,255,.1)}
+.reply-footer{display:flex;align-items:center;gap:10px;margin-top:12px}
+.reply-hint{font-size:12px;color:var(--muted2);flex:1}
+.btn-submit{
+  padding:10px 24px;border-radius:var(--r);font-size:14px;font-weight:700;
+  background:var(--blue);color:#fff;box-shadow:0 0 20px var(--blue-glow);
+  transition:all .2s;
+}
+.btn-submit:hover{background:var(--blue2);transform:translateY(-1px)}
+
+/* ── AUTH PAGES ─────────────────────────────────── */
+.auth-bg{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(26,111,255,0.1),transparent 60%);
+  padding:40px 20px;
+}
+.auth-card{
+  background:var(--card);border:1px solid var(--border2);border-radius:var(--r3);
+  padding:40px;width:100%;max-width:440px;
+  box-shadow:0 40px 100px rgba(0,0,0,.6);
+  animation:fadeUp .3s ease;
+}
+.auth-logo{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  margin-bottom:32px;
+}
+.auth-logo .logo-icon{width:44px;height:44px;font-size:22px;border-radius:12px}
+.auth-logo span{font-size:26px;font-weight:900}
+.auth-card h2{font-size:24px;font-weight:900;margin-bottom:6px}
+.auth-card .auth-sub{font-size:14px;color:var(--muted);margin-bottom:28px}
+
+.form-group{margin-bottom:16px}
+.form-label{font-size:13px;font-weight:700;color:var(--muted);margin-bottom:6px;display:block}
+.form-input{
+  width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);
+  padding:12px 16px;color:var(--white);font-size:14px;outline:none;
+  transition:border-color .2s,box-shadow .2s;
+}
+.form-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,111,255,.15)}
+.form-input::placeholder{color:var(--muted2)}
+
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+.btn-full{
+  width:100%;padding:13px;border-radius:var(--r);font-size:15px;font-weight:800;
+  background:var(--blue);color:#fff;box-shadow:0 0 24px var(--blue-glow);
+  transition:all .2s;margin-top:6px;
+}
+.btn-full:hover{background:var(--blue2);transform:translateY(-1px);box-shadow:0 6px 28px var(--blue-glow)}
+
+.auth-switch{text-align:center;margin-top:20px;font-size:14px;color:var(--muted)}
+.auth-switch a{color:var(--blue2);font-weight:700;cursor:pointer}
+.auth-switch a:hover{text-decoration:underline}
+
+.form-check{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.form-check input[type=checkbox]{accent-color:var(--blue);width:15px;height:15px}
+
+.auth-divider{display:flex;align-items:center;gap:10px;margin:20px 0;color:var(--muted2);font-size:12px}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.form-select{
+  width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);
+  padding:12px 16px;color:var(--white);font-size:14px;outline:none;
+  transition:border-color .2s;-webkit-appearance:none;
+}
+.form-select:focus{border-color:var(--blue)}
+
+/* Avatar picker */
+.avatar-picker{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.avatar-opt{
+  width:44px;height:44px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;
+  cursor:pointer;border:2px solid transparent;transition:all .2s;
+}
+.avatar-opt.selected,.avatar-opt:hover{border-color:var(--blue);box-shadow:0 0 12px var(--blue-glow)}
+
+/* ── PROFILE PAGE ───────────────────────────────── */
+.profile-page{max-width:1400px;margin:0 auto;padding:32px}
+.profile-header{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--r2);
+  padding:32px;margin-bottom:24px;
+  display:flex;align-items:flex-start;gap:28px;
+  background:linear-gradient(135deg,var(--card),var(--card2));
+}
+.profile-avatar-big{
+  width:90px;height:90px;border-radius:20px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:38px;font-weight:900;color:#fff;
+  box-shadow:0 8px 32px rgba(0,0,0,.4);
+}
+.profile-info{flex:1}
+.profile-username{font-size:28px;font-weight:900;margin-bottom:4px}
+.profile-role-row{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.profile-bio{font-size:14px;color:var(--muted);max-width:500px;line-height:1.6}
+.profile-joined{font-size:12px;color:var(--muted2);margin-top:8px}
+.profile-stats-row{
+  display:flex;gap:24px;flex-wrap:wrap;margin-top:16px;
+  padding-top:16px;border-top:1px solid var(--border);
+}
+.pstat{text-align:center}
+.pstat-val{font-size:20px;font-weight:800}
+.pstat-lbl{font-size:11px;color:var(--muted2);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+
+.profile-grid{display:grid;grid-template-columns:1fr 300px;gap:24px}
+
+/* Profile tabs */
+.ptabs{display:flex;gap:2px;margin-bottom:16px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:4px;width:fit-content}
+.ptab{
+  padding:8px 18px;border-radius:8px;font-size:13px;font-weight:700;
+  color:var(--muted);cursor:pointer;transition:all .15s;
+}
+.ptab.active{background:var(--blue);color:#fff;box-shadow:0 0 16px var(--blue-glow)}
+.ptab:not(.active):hover{color:var(--white);background:rgba(255,255,255,.06)}
+
+/* Badges */
+.badges-grid{display:flex;gap:10px;flex-wrap:wrap}
+.badge-item{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:14px;border-radius:var(--r);background:var(--card2);border:1px solid var(--border);
+  min-width:80px;text-align:center;cursor:help;transition:border-color .15s;
+}
+.badge-item:hover{border-color:var(--border2)}
+.badge-ico{font-size:28px;margin-bottom:2px}
+.badge-name{font-size:11px;font-weight:700;color:var(--muted)}
+
+/* ── NOTIFICATIONS ──────────────────────────────── */
+.notif-dot{
+  position:absolute;top:4px;right:4px;
+  width:8px;height:8px;border-radius:50%;background:var(--red);
+  box-shadow:0 0 6px var(--red);
+}
+.notif-list{max-height:400px;overflow-y:auto}
+.notif-item{
+  padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;
+  display:flex;gap:10px;transition:background .15s;
+}
+.notif-item:hover{background:rgba(255,255,255,.04)}
+.notif-item.unread{background:rgba(26,111,255,.06)}
+.notif-ico{font-size:18px;flex-shrink:0;margin-top:2px}
+.notif-body{flex:1;font-size:13px}
+.notif-body b{font-weight:700;color:var(--white)}
+.notif-body .nt{color:var(--muted);font-size:11px;margin-top:2px}
+
+/* ── SEARCH OVERLAY ─────────────────────────────── */
+.search-overlay{
+  position:fixed;inset:0;z-index:500;
+  opacity:0;pointer-events:none;transition:opacity .3s;
+}
+.search-overlay.active{opacity:1;pointer-events:all}
+.search-bd{
+  position:absolute;inset:0;background:rgba(0,0,0,.7);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+}
+.search-modal{
+  position:absolute;top:0;left:0;right:0;
+  background:rgba(8,12,16,.95);border-bottom:1px solid var(--border);
+  padding:20px 32px 28px;
+  transform:translateY(-12px);transition:transform .3s;
+  box-shadow:0 30px 80px rgba(0,0,0,.7);
+}
+.search-overlay.active .search-modal{transform:translateY(0)}
+.search-modal-top{display:flex;align-items:center;gap:16px;height:64px;margin-bottom:20px}
+.search-input-big{
+  flex:1;display:flex;align-items:center;gap:12px;
+  background:var(--card2);border:1px solid var(--border2);border-radius:var(--r2);
+  padding:13px 18px;transition:border-color .2s;
+}
+.search-input-big:focus-within{border-color:var(--blue)}
+.search-input-big input{
+  flex:1;background:none;border:none;outline:none;
+  font-size:17px;color:var(--white);font-family:var(--font);
+}
+.search-input-big input::placeholder{color:var(--muted2)}
+.search-close{
+  width:40px;height:40px;border-radius:var(--r);border:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;color:var(--muted);cursor:pointer;transition:all .2s;
+}
+.search-close:hover{color:var(--white);transform:rotate(90deg)}
+.search-popular-label{font-size:11px;font-weight:800;color:var(--muted2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px}
+.search-popular{display:flex;flex-direction:column;gap:6px;margin-bottom:20px}
+.sp-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 18px;border-radius:50px;
+  border:1px solid var(--border);background:rgba(255,255,255,.03);
+  cursor:pointer;font-size:14px;font-weight:600;color:var(--muted);
+  transition:all .2s;
+}
+.sp-item:hover{color:var(--white);background:rgba(26,111,255,.1);border-color:rgba(26,111,255,.4);transform:translateX(4px)}
+.quick-links{display:flex;gap:10px}
+.ql{
+  padding:9px 18px;border-radius:50px;font-size:13px;font-weight:700;
+  cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px;
+}
+.ql.blue{border:1px solid rgba(26,111,255,.5);color:var(--white);background:rgba(26,111,255,.08)}
+.ql.red{border:1px solid rgba(239,68,68,.5);color:var(--white);background:rgba(239,68,68,.08)}
+.ql.yellow{border:1px solid rgba(234,179,8,.5);color:var(--white);background:rgba(234,179,8,.08)}
+.ql:hover{opacity:.8;transform:translateY(-1px)}
+
+/* ── NEW THREAD MODAL ───────────────────────────── */
+.modal-overlay{
+  position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.7);backdrop-filter:blur(8px);
+  opacity:0;pointer-events:none;transition:opacity .25s;padding:20px;
+}
+.modal-overlay.active{opacity:1;pointer-events:all}
+.modal-box{
+  background:var(--card);border:1px solid var(--border2);border-radius:var(--r3);
+  padding:32px;width:100%;max-width:620px;
+  transform:scale(.96) translateY(10px);transition:transform .25s;
+  box-shadow:0 40px 100px rgba(0,0,0,.6);max-height:90vh;overflow-y:auto;
+}
+.modal-overlay.active .modal-box{transform:scale(1) translateY(0)}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.modal-header h3{font-size:20px;font-weight:900}
+.modal-close{font-size:20px;color:var(--muted);cursor:pointer;transition:all .15s;padding:4px 8px}
+.modal-close:hover{color:var(--white);transform:rotate(90deg)}
+
+/* ── ANIMATIONS ─────────────────────────────────── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+/* Staggered cards */
+.cat-block:nth-child(1){animation:fadeUp .4s ease .05s both}
+.cat-block:nth-child(2){animation:fadeUp .4s ease .1s both}
+.cat-block:nth-child(3){animation:fadeUp .4s ease .15s both}
+.cat-block:nth-child(4){animation:fadeUp .4s ease .2s both}
+.thread-row:nth-child(1){animation:fadeUp .3s ease .03s both}
+.thread-row:nth-child(2){animation:fadeUp .3s ease .06s both}
+.thread-row:nth-child(3){animation:fadeUp .3s ease .09s both}
+.thread-row:nth-child(4){animation:fadeUp .3s ease .12s both}
+.thread-row:nth-child(5){animation:fadeUp .3s ease .15s both}
+.thread-row:nth-child(6){animation:fadeUp .3s ease .18s both}
+
+/* ── BREADCRUMB ─────────────────────────────────── */
+.breadcrumb{
+  max-width:1400px;margin:0 auto;padding:16px 32px 0;
+  display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted2);
+}
+.breadcrumb a,.breadcrumb span{cursor:pointer;transition:color .15s}
+.breadcrumb a:hover{color:var(--blue2)}
+.breadcrumb .sep{color:var(--border2)}
+
+/* ── RESPONSIVE ─────────────────────────────────── */
+@media(max-width:900px){
+  .forum-layout,.thread-page-layout,.profile-grid{grid-template-columns:1fr}
+  .forum-sidebar,.thread-sidebar{display:none}
+  .post-inner{grid-template-columns:1fr}
+  .post-author-col{flex-direction:row;border-right:none;border-bottom:1px solid var(--border)}
+  .form-row{grid-template-columns:1fr}
+}
+@media(max-width:640px){
+  .nav-inner{padding:0 16px;gap:10px}
+  .nav-links{display:none}
+  .forum-layout,.thread-page-layout,.profile-page,.forum-hero{padding-left:16px;padding-right:16px}
+  .forum-hero{padding:28px 16px}
+  .search-modal{padding:16px}
+}
+
+/* ── UTILITY ────────────────────────────────────── */
+.hidden{display:none!important}
+.mt-4{margin-top:4px}.mt-8{margin-top:8px}.mt-12{margin-top:12px}.mt-16{margin-top:16px}
+.flex-center{display:flex;align-items:center;gap:8px}
+.text-muted{color:var(--muted)}
+.text-blue{color:var(--blue2)}
+.text-green{color:var(--green)}
+.empty-state{
+  text-align:center;padding:60px 20px;color:var(--muted2);
+}
+.empty-state .es-ico{font-size:48px;margin-bottom:12px}
+.empty-state p{font-size:15px}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════
+     SEARCH OVERLAY
+═══════════════════════════════════════════════════ -->
+<div class="search-overlay" id="searchOverlay">
+  <div class="search-bd" id="searchBd"></div>
+  <div class="search-modal">
+    <div class="search-modal-top">
+      <div class="search-input-big">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;opacity:.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="searchInputBig" placeholder="Поиск по форуму..." autocomplete="off"/>
+      </div>
+      <div class="search-close" id="searchClose">✕</div>
+    </div>
+    <p class="search-popular-label">Популярные запросы</p>
+    <div class="search-popular">
+      <div class="sp-item" onclick="fillSearch(this)"><span>Как установить OptiFine 1.21?</span><span style="font-size:11px;opacity:.4">›</span></div>
+      <div class="sp-item" onclick="fillSearch(this)"><span>Лучшие PvP серверы 2024</span><span style="font-size:11px;opacity:.4">›</span></div>
+      <div class="sp-item" onclick="fillSearch(this)"><span>Шейдеры для слабых ПК</span><span style="font-size:11px;opacity:.4">›</span></div>
+    </div>
+    <p class="search-popular-label">Быстрые ссылки</p>
+    <div class="quick-links">
+      <div class="ql blue" onclick="navigate('forum');closeSearch()">🏠 Главная</div>
+      <div class="ql red" onclick="navigate('forum');closeSearch()">🔥 Горящие темы</div>
+      <div class="ql yellow" onclick="navigate('forum');closeSearch()">📋 Правила</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     NEW THREAD MODAL
+═══════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="newThreadModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>✏️ Новая тема</h3>
+      <span class="modal-close" onclick="closeModal('newThreadModal')">✕</span>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Заголовок темы</label>
+      <input type="text" class="form-input" placeholder="Напишите заголовок..." id="newThreadTitle"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Раздел</label>
+      <select class="form-select">
+        <option>Общение</option>
+        <option>Технический раздел</option>
+        <option>Моды и сборки</option>
+        <option>Серверный раздел</option>
+        <option>Творчество</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Теги (через запятую)</label>
+      <input type="text" class="form-input" placeholder="вопрос, моды, 1.21..."/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Текст сообщения</label>
+      <div class="reply-toolbar" style="margin-bottom:6px">
+        <button class="toolbar-btn">B</button>
+        <button class="toolbar-btn"><i>I</i></button>
+        <button class="toolbar-btn"><u>U</u></button>
+        <button class="toolbar-btn">〉Код</button>
+        <button class="toolbar-btn">🖼 Изображение</button>
+      </div>
+      <textarea class="reply-textarea" style="min-height:160px" placeholder="Опишите вашу тему подробно..."></textarea>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
+      <button class="btn-login" onclick="closeModal('newThreadModal')" style="padding:10px 20px;border-radius:var(--r);font-size:14px;font-weight:700;cursor:pointer">Отмена</button>
+      <button class="btn-submit" onclick="submitNewThread()">Опубликовать</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     PAGE: FORUM HOME
+═══════════════════════════════════════════════════ -->
+<div class="page active" id="page-forum">
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-inner">
+      <div class="nav-logo" onclick="navigate('forum')">
+        <div class="logo-icon">⛏</div>
+        <span><span class="logo-w">Mine</span><span class="logo-b">Board</span></span>
+      </div>
+      <div class="nav-links">
+        <span class="nav-link active" onclick="navigate('forum')">Форум</span>
+        <span class="nav-link" onclick="navigate('forum')">Новые темы</span>
+        <span class="nav-link" onclick="navigate('forum')">Рейтинг</span>
+        <span class="nav-link" onclick="navigate('forum')">Правила</span>
+      </div>
+      <div class="nav-search" onclick="openSearch()">
+        <svg class="search-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" placeholder="Поиск..." readonly onclick="openSearch()"/>
+      </div>
+      <div class="nav-right" id="navRight">
+        <button class="btn-login" onclick="navigate('login')">Войти</button>
+        <button class="btn-register" onclick="navigate('register')">Регистрация</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <div class="forum-hero">
+    <div class="hero-inner">
+      <h1>Добро пожаловать на <span>MineBoard</span></h1>
+      <p>Крупнейший русскоязычный форум игроков Minecraft. Общайся, делись опытом и находи друзей.</p>
+      <div class="hero-stats">
+        <div class="hstat"><div class="hstat-val"><span id="statsUsers">12 847</span></div><div class="hstat-lbl">Пользователей</div></div>
+        <div class="hstat"><div class="hstat-val"><span id="statsThreads">48 291</span></div><div class="hstat-lbl">Тем</div></div>
+        <div class="hstat"><div class="hstat-val"><span id="statsPosts">394 017</span></div><div class="hstat-lbl">Сообщений</div></div>
+        <div class="hstat"><div class="hstat-val"><span id="statsOnline">241</span></div><div class="hstat-lbl">Онлайн сейчас</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORUM LAYOUT -->
+  <div class="forum-layout">
+    <div class="forum-main">
+
+      <!-- CAT 1: Общее -->
+      <div class="sec-label">Основные разделы</div>
+
+      <div class="cat-block">
+        <div class="cat-header">
+          <div class="cat-ico" style="background:rgba(26,111,255,.15)">💬</div>
+          <div>
+            <div class="cat-title">Общение</div>
+            <div class="cat-desc">Свободное общение, знакомства, флуд</div>
+          </div>
+          <div class="cat-meta"><span><b>8 421</b> тем · <b>67 302</b> сообщений</span></div>
+        </div>
+        <div class="subcat" onclick="navigate('threads','general-chat')">
+          <div class="subcat-ico">💬</div>
+          <div class="subcat-info">
+            <div class="subcat-name">Общий чат</div>
+            <div class="subcat-desc">Обсуждай всё что угодно, знакомься с другими игроками</div>
+          </div>
+          <div class="subcat-stats">
+            <div class="subcat-stat"><b>4 218</b> Тем</div>
+            <div class="subcat-stat"><b>38 104</b> Сообщ.</div>
+          </div>
+          <div class="subcat-last">
+            <div class="subcat-last-title">Как вы познакомились с МК?</div>
+            <div class="subcat-last-by">от Notch_Fan · 5 мин</div>
+          </div>
+        </div>
+        <div class="subcat" onclick="navigate('threads','introductions')">
+          <div class="subcat-ico">👋</div>
+          <div class="subcat-info">
+            <div class="subcat-name">Знакомства</div>
+            <div class="subcat-desc">Расскажи о себе, найди единомышленников</div>
+          </div>
+          <div class="subcat-stats">
+            <div class="subcat-stat"><b>1 092</b> Тем</div>
+            <div class="subcat-stat"><b>9 847</b> Сообщ.</div>
+          </div>
+          <div class="subcat-last">
+            <div class="subcat-last-title">Привет от нового участника!</div>
+            <div class="subcat-last-by">от CreeperBoy · 12 мин</div>
+          </div>
+        </div>
+        <div class="subcat" onclick="navigate('threads','memes')">
+          <div class="subcat-ico">😂</div>
+          <div class="subcat-info">
+            <div class="subcat-name">Мемы и юмор</div>
+            <div class="subcat-desc">Смешные скриншоты, видео, шутки</div>
+          </div>
+          <div class="subcat-stats">
+            <div class="subcat-stat"><b>3 111</b> Тем</div>
+            <div class="subcat-stat"><b>19 351</b> Сообщ.</div>
+          </div>
+          <div class="subcat-last">
+            <div class="subcat-last-title">Криперы — эндгейм-боссы?</div>
+            <div class="subcat-last-by">от DiamondSteve · 1 ч</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CAT 2: Технический -->
+      <div class="cat-block">
+        <div class="cat-header">
+          <div class="cat-ico" style="background:rgba(34,197,94,.12)">🔧</div>
+          <div>
+            <div class="cat-title">Технический раздел</div>
+            <div class="cat-desc">Помощь, баги, оптимизация, лаунчер</div>
+          </div>
+          <div class="cat-meta"><span><b>12 084</b> тем · <b>89 411</b> сообщений</span></div>
+        </div>
+        <div class="subcat" onclick="navigate('threads','help')">
+          <div class="subcat-ico">❓</div>
+          <div class="subcat-info">
+            <div class="subcat-name">Помощь и поддержка</div>
+            <div class="subcat-desc">Задавай технические вопросы, получай ответы сообщества</div>
+          </div>
+          <div class="subcat-stats">
+            <div class="subcat-stat"><b>6 847</b> Тем</div>
+            <div class="subcat-stat"><b>52 014</b> Сообщ.</div>
+          </div>
+          <div class="subcat-last">
+            <div class="subcat-last-title">Вылет на Java 21 + 1.21.1</div>
+            <div class="subcat-last-by">от xXGamingXx · 3 мин</div>
+          </div>
+        </div>
+        <div class="subcat" onclick="navigate('threads','optimization')">
+          <div class="subcat-ico">⚡</div>
+          <div class="subcat-info">
+            <div class="subcat-name">Оптимизация и графика</div>
+            <div class="subcat-desc">Шейдеры, текстурпаки, настройки FPS</div>
+          </div>
+          <div class="subcat-stats">
+            <div class="subcat-stat"><b>3 291</b> Тем</div>
+            <div class="subcat-stat"><b>24 817</b> Сообщ.</div>
+          </div>
+          <div class="subcat-last">
+            <div class="subcat-last-title">BSL Shaders vs Complementary 2024</div>
+            <div class="subcat-last-by">от GPU_Lord · 28 мин</div>
+          </div>
+        </div>
+        <div class="subcat" onclick="navigate('threads','bugs')">
+          <div class="subcat-ico">🐛</div>
+          <div class="subcat-info">
+            <div class="subcat-name">Баги и ошибки</div>
+            <div class="subcat-desc">Сообщай о найденных багах, обходные пути</div>
+          </div>
+          <div class="subcat-stats">
+            <div class="subcat-stat"><b>1 946</b> Тем</div>
+            <div class="subcat-stat"><b>12 580</b> Сообщ.</div>
+          </div>
+          <div class="subcat-last">
+            <div class="subcat-last-title">Дублирование предметов через сундук</div>
+            <div class="subcat-last-by">от BugHunter · 2 ч</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CAT 3: Моды -->
+      <div class="cat-block">
+        <div class="cat-header">
+          <div class="cat-ico" style="background:rgba(249,115,22,.12)">🧩</div>
+          <div>
+            <div class="cat-title">Моды и сборки</div>
+            <div class="cat-desc">Обсуждение модов, готовые сборки, ресурспаки</div>
+          </div>
+          <div class="cat-meta"><span><b>9 317</b> тем · <b>74 820</b> сообщений</span></div>
+        </div>
+        <div class="subcat" onclick="navigate('threads','mods')">
+          <div class="subcat-ico">🧩</div>
+          <div class="subcat-info">
+            <div class="subcat-name">Обсуждение модов</div>
+            <div class="subcat-desc">Обзоры, рекомендации, совместимость</div>
+          </div>
+          <div class="subcat-stats">
+            <div class="subcat-stat"><b>5 124</b> Тем</div>
+            <div class="subcat-stat"><b>41 307</b> Сообщ.</div>
+          </div>
+          <div class="subcat-last">
+            <div class="subcat-last-title">Лучшие технические моды для 1.21</div>
+            <div class="subcat-last-by">от ModMaster · 45 мин</div>
+          </div>
+        </div>
+        <div class="subcat" onclick="navigate('threads','modpacks')">
+          <div class="subcat-ico">📦</div>
+          <div class="subcat-info">
+            <div class="subcat-name">Сборки и модпаки</div>
+            <div class="subcat-desc">Готовые сборки, настройка, FTB, ATM</div>
+          </div>
+          <div class="subcat-stats">
+            <div class="subcat-stat"><b>2 847</b> Тем</div>
+            <div class="subcat-stat"><b>22 419</b> Сообщ.</div>
+          </div>
+          <div class="subcat-last">
+            <div class="subcat-last-title">All the Mods 9 — стоит ли?</div>
+            <div class="subcat-last-by">от PackRat · 1 ч</div>
+          </div>
+        </div>
+        <div class="subcat" onclick="navigate('threads','resources')">
+          <div class="subcat-ico">🎨</div>
+          <div class="subcat-info">
+            <div class="subcat-name">Ресурспаки и текстуры</div>
+            <div class="subcat-desc">Делись своими работами, обсуждай чужие</div>
+          </div>
+          <div class="subcat-stats">
+            <div class="subcat-stat"><b>1 346</b> Тем</div>
+            <div class="subcat-stat"><b>11 094</b> Сообщ.</div>
+          </div>
+          <div class="subcat-last">
+            <div class="subcat-last-title">Faithful 64x — обзор</div>
+            <div class="subcat-last-by">от PixelArtist · 3 ч</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CAT 4: Серверный -->
+      <div class="cat-block">
+        <div class="cat-header">
+          <div class="cat-ico" style="background:rgba(234,179,8,.12)">🌐</div>
+          <div>
+            <div class="cat-title">Серверный раздел</div>
+            <div class="cat-desc">Серверы, реклама, администрирование</div>
+          </div>
+          <div class="cat-meta"><span><b>6 204</b> тем · <b>54 901</b> сообщений</span></div>
+        </div>
+        <div class="subcat" onclick="navigate('threads','servers')">
+          <div class="subcat-ico">🌐</div>
+          <div class="subcat-info">
+            <div class="subcat-name">Реклама серверов</div>
+            <div class="subcat-desc">Размещай объявления о своём сервере</div>
+          </div>
+          <div class="subcat-stats">
+            <div class="subcat-stat"><b>4 102</b> Тем</div>
+            <div class="subcat-stat"><b>31 847</b> Сообщ.</div>
+          </div>
+          <div class="subcat-last">
+            <div class="subcat-last-title">[PvP] SkyWars Network 1.8-1.21</div>
+            <div class="subcat-last-by">от ServerOwner · 18 мин</div>
+          </div>
+        </div>
+        <div class="subcat" onclick="navigate('threads','admin')">
+          <div class="subcat-ico">⚙️</div>
+          <div class="subcat-info">
+            <div class="subcat-name">Администрирование</div>
+            <div class="subcat-desc">Плагины, Paper, Spigot, конфигурация</div>
+          </div>
+          <div class="subcat-stats">
+            <div class="subcat-stat"><b>2 102</b> Тем</div>
+            <div class="subcat-stat"><b>23 054</b> Сообщ.</div>
+          </div>
+          <div class="subcat-last">
+            <div class="subcat-last-title">EssentialsX — настройка экономики</div>
+            <div class="subcat-last-by">от AdminPro · 4 ч</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CAT 5: Творчество -->
+      <div class="cat-block">
+        <div class="cat-header">
+          <div class="cat-ico" style="background:rgba(239,68,68,.12)">🎨</div>
+          <div>
+            <div class="cat-title">Творчество и медиа</div>
+            <div class="cat-desc">Стримы, видео, скриншоты, арты</div>
+          </div>
+          <div class="cat-meta"><span><b>4 819</b> тем · <b>38 017</b> сообщений</span></div>
+        </div>
+        <div class="subcat" onclick="navigate('threads','screenshots')">
+          <div class="subcat-ico">📸</div>
+          <div class="subcat-info">
+            <div class="subcat-name">Скриншоты и постройки</div>
+            <div class="subcat-desc">Хвастайся своими мирами и постройками</div>
+          </div>
+          <div class="subcat-stats">
+            <div class="subcat-stat"><b>3 418</b> Тем</div>
+            <div class="subcat-stat"><b>28 104</b> Сообщ.</div>
+          </div>
+          <div class="subcat-last">
+            <div class="subcat-last-title">Мой замок за 3 месяца — результат</div>
+            <div class="subcat-last-by">от BuildKing · 22 мин</div>
+          </div>
+        </div>
+        <div class="subcat" onclick="navigate('threads','videos')">
+          <div class="subcat-ico">🎬</div>
+          <div class="subcat-info">
+            <div class="subcat-name">Видео и стримы</div>
+            <div class="subcat-desc">YouTube, Twitch, TikTok — делись контентом</div>
+          </div>
+          <div class="subcat-stats">
+            <div class="subcat-stat"><b>1 401</b> Тем</div>
+            <div class="subcat-stat"><b>9 913</b> Сообщ.</div>
+          </div>
+          <div class="subcat-last">
+            <div class="subcat-last-title">Новый летсплей — Hardcore 1.21 с нуля</div>
+            <div class="subcat-last-by">от StreamerPro · 7 ч</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /forum-main -->
+
+    <!-- SIDEBAR -->
+    <div class="forum-sidebar">
+      <div class="sec-label">Онлайн сейчас</div>
+      <div class="side-card">
+        <div class="online-list">
+          <div class="online-user" onclick="navigate('profile','Notch_Fan')">
+            <div class="online-dot"></div>
+            <div class="ou-avatar" style="background:linear-gradient(135deg,#1a6fff,#22c55e)">N</div>
+            <span class="ou-name">Notch_Fan</span>
+            <span class="ou-role">Ветеран</span>
+          </div>
+          <div class="online-user" onclick="navigate('profile','CreeperBoy')">
+            <div class="online-dot"></div>
+            <div class="ou-avatar" style="background:linear-gradient(135deg,#22c55e,#16a34a)">C</div>
+            <span class="ou-name">CreeperBoy</span>
+            <span class="ou-role">Участник</span>
+          </div>
+          <div class="online-user" onclick="navigate('profile','DiamondSteve')">
+            <div class="online-dot"></div>
+            <div class="ou-avatar" style="background:linear-gradient(135deg,#38bdf8,#0ea5e9)">D</div>
+            <span class="ou-name">DiamondSteve</span>
+            <span class="ou-role">Мод</span>
+          </div>
+          <div class="online-user" onclick="navigate('profile','BuildKing')">
+            <div class="online-dot"></div>
+            <div class="ou-avatar" style="background:linear-gradient(135deg,#f97316,#ea580c)">B</div>
+            <span class="ou-name">BuildKing</span>
+            <span class="ou-role">Участник</span>
+          </div>
+          <div class="online-user" onclick="navigate('profile','GPU_Lord')">
+            <div class="online-dot"></div>
+            <div class="ou-avatar" style="background:linear-gradient(135deg,#a855f7,#7c3aed)">G</div>
+            <span class="ou-name">GPU_Lord</span>
+            <span class="ou-role">Участник</span>
+          </div>
+        </div>
+        <div style="margin-top:12px;font-size:12px;color:var(--muted2);text-align:center">
+          +236 гостей онлайн
+        </div>
+      </div>
+
+      <div class="sec-label" style="margin-top:8px">Последняя активность</div>
+      <div class="side-card">
+        <div class="activity-list">
+          <div class="activity-item" onclick="navigate('thread','1')">
+            <b>Notch_Fan</b> ответил в «Как вы познакомились с МК?»
+            <span class="ai-time">5 минут назад</span>
+          </div>
+          <div class="activity-item" onclick="navigate('thread','2')">
+            <b>xXGamingXx</b> создал тему «Вылет на Java 21»
+            <span class="ai-time">3 минуты назад</span>
+          </div>
+          <div class="activity-item" onclick="navigate('thread','3')">
+            <b>BuildKing</b> опубликовал скриншоты замка
+            <span class="ai-time">22 минуты назад</span>
+          </div>
+          <div class="activity-item" onclick="navigate('thread','4')">
+            <b>ModMaster</b> ответил в теме про моды
+            <span class="ai-time">45 минут назад</span>
+          </div>
+          <div class="activity-item" onclick="navigate('thread','5')">
+            <b>AdminPro</b> создал гайд по EssentialsX
+            <span class="ai-time">4 часа назад</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec-label" style="margin-top:8px">Популярные теги</div>
+      <div class="side-card">
+        <div class="tags-cloud">
+          <span class="tag">1.21</span><span class="tag">моды</span><span class="tag">PvP</span>
+          <span class="tag">шейдеры</span><span class="tag">выживание</span><span class="tag">постройки</span>
+          <span class="tag">сервер</span><span class="tag">Forge</span><span class="tag">Fabric</span>
+          <span class="tag">Java</span><span class="tag">OptiFine</span><span class="tag">скины</span>
+          <span class="tag">SkyBlock</span><span class="tag">Creative</span><span class="tag">баги</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     PAGE: THREAD LIST
+═══════════════════════════════════════════════════ -->
+<div class="page" id="page-threads">
+  <nav class="navbar">
+    <div class="nav-inner">
+      <div class="nav-logo" onclick="navigate('forum')">
+        <div class="logo-icon">⛏</div>
+        <span><span class="logo-w">Mine</span><span class="logo-b">Board</span></span>
+      </div>
+      <div class="nav-links">
+        <span class="nav-link" onclick="navigate('forum')">Форум</span>
+        <span class="nav-link" onclick="navigate('forum')">Новые темы</span>
+        <span class="nav-link" onclick="navigate('forum')">Рейтинг</span>
+      </div>
+      <div class="nav-search" onclick="openSearch()">
+        <svg class="search-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" placeholder="Поиск..." readonly/>
+      </div>
+      <div class="nav-right" id="navRightThreads">
+        <button class="btn-login" onclick="navigate('login')">Войти</button>
+        <button class="btn-register" onclick="navigate('register')">Регистрация</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="breadcrumb">
+    <a onclick="navigate('forum')">🏠 Форум</a>
+    <span class="sep">›</span>
+    <span id="breadcrumbCat">Раздел</span>
+  </div>
+
+  <div class="forum-layout">
+    <div class="forum-main">
+      <div class="thread-list-header">
+        <div class="tlh-back" onclick="navigate('forum')">←</div>
+        <div class="tlh-info">
+          <h2 id="threadListTitle">Общий чат</h2>
+          <p id="threadListDesc">4 218 тем · 38 104 сообщений</p>
+        </div>
+        <button class="btn-new-thread" onclick="requireAuth(()=>openModal('newThreadModal'))">
+          <span>✏</span> Новая тема
+        </button>
+      </div>
+
+      <!-- Filters -->
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+        <button class="mod-filter active" style="padding:7px 16px;border-radius:50px;font-size:13px;font-weight:700;border:1px solid var(--blue);color:var(--blue2);background:rgba(26,111,255,.1);cursor:pointer">Все темы</button>
+        <button class="mod-filter" style="padding:7px 16px;border-radius:50px;font-size:13px;font-weight:700;border:1px solid var(--border);color:var(--muted);background:transparent;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='var(--border2)';this.style.color='var(--white)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">🔥 Горящие</button>
+        <button class="mod-filter" style="padding:7px 16px;border-radius:50px;font-size:13px;font-weight:700;border:1px solid var(--border);color:var(--muted);background:transparent;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='var(--border2)';this.style.color='var(--white)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">📌 Закреплённые</button>
+        <button class="mod-filter" style="padding:7px 16px;border-radius:50px;font-size:13px;font-weight:700;border:1px solid var(--border);color:var(--muted);background:transparent;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='var(--border2)';this.style.color='var(--white)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">✅ Решённые</button>
+      </div>
+
+      <!-- Pinned thread -->
+      <div class="thread-row pinned" onclick="navigate('thread','1')">
+        <div class="thread-status">📌</div>
+        <div class="thread-body">
+          <div class="thread-title">📋 Правила раздела — обязательно к прочтению!</div>
+          <div class="thread-meta">
+            <div class="thread-author">
+              <div class="ta-avatar" style="background:linear-gradient(135deg,#ef4444,#b91c1c)">A</div>
+              Admin
+            </div>
+            <div class="thread-tags">
+              <span class="thread-tag red">📌 Закреплено</span>
+              <span class="thread-tag blue">Важно</span>
+            </div>
+          </div>
+        </div>
+        <div class="thread-stats">
+          <div class="t-stat"><b>0</b> Ответов</div>
+          <div class="t-stat"><b>12 481</b> Просм.</div>
+        </div>
+      </div>
+
+      <!-- Hot thread -->
+      <div class="thread-row hot" onclick="navigate('thread','2')">
+        <div class="thread-status">🔥</div>
+        <div class="thread-body">
+          <div class="thread-title">Как вы познакомились с Minecraft? Большой опрос!</div>
+          <div class="thread-meta">
+            <div class="thread-author">
+              <div class="ta-avatar" style="background:linear-gradient(135deg,#1a6fff,#22c55e)">N</div>
+              Notch_Fan
+            </div>
+            <div class="thread-tags">
+              <span class="thread-tag orange">🔥 Горячее</span>
+              <span class="thread-tag green">Опрос</span>
+            </div>
+          </div>
+        </div>
+        <div class="thread-stats">
+          <div class="t-stat"><b>284</b> Ответов</div>
+          <div class="t-stat"><b>8 471</b> Просм.</div>
+        </div>
+      </div>
+
+      <div class="thread-row" onclick="navigate('thread','3')">
+        <div class="thread-status">💬</div>
+        <div class="thread-body">
+          <div class="thread-title">Ваш любимый биом в 1.21 — обсуждаем обновление Tricky Trials</div>
+          <div class="thread-meta">
+            <div class="thread-author">
+              <div class="ta-avatar" style="background:linear-gradient(135deg,#38bdf8,#0ea5e9)">D</div>
+              DiamondSteve
+            </div>
+            <div class="thread-tags">
+              <span class="thread-tag blue">1.21</span>
+              <span class="thread-tag">Обсуждение</span>
+            </div>
+          </div>
+        </div>
+        <div class="thread-stats">
+          <div class="t-stat"><b>47</b> Ответов</div>
+          <div class="t-stat"><b>1 204</b> Просм.</div>
+        </div>
+      </div>
+
+      <div class="thread-row" onclick="navigate('thread','4')">
+        <div class="thread-status">💬</div>
+        <div class="thread-body">
+          <div class="thread-title">Ищу друзей для совместного выживания на хардкоре</div>
+          <div class="thread-meta">
+            <div class="thread-author">
+              <div class="ta-avatar" style="background:linear-gradient(135deg,#f97316,#ea580c)">B</div>
+              BuildKing
+            </div>
+            <div class="thread-tags">
+              <span class="thread-tag green">Набор</span>
+              <span class="thread-tag">Хардкор</span>
+            </div>
+          </div>
+        </div>
+        <div class="thread-stats">
+          <div class="t-stat"><b>23</b> Ответов</div>
+          <div class="t-stat"><b>491</b> Просм.</div>
+        </div>
+      </div>
+
+      <div class="thread-row" onclick="navigate('thread','5')">
+        <div class="thread-status">💬</div>
+        <div class="thread-body">
+          <div class="thread-title">Minecraft vs Terraria — что лучше для строительства и почему?</div>
+          <div class="thread-meta">
+            <div class="thread-author">
+              <div class="ta-avatar" style="background:linear-gradient(135deg,#a855f7,#7c3aed)">G</div>
+              GPU_Lord
+            </div>
+            <div class="thread-tags">
+              <span class="thread-tag">Сравнение</span>
+            </div>
+          </div>
+        </div>
+        <div class="thread-stats">
+          <div class="t-stat"><b>61</b> Ответов</div>
+          <div class="t-stat"><b>2 847</b> Просм.</div>
+        </div>
+      </div>
+
+      <div class="thread-row" onclick="navigate('thread','6')">
+        <div class="thread-status">✅</div>
+        <div class="thread-body">
+          <div class="thread-title">[Решено] Как убрать лаги при открытии инвентаря в 1.20.4?</div>
+          <div class="thread-meta">
+            <div class="thread-author">
+              <div class="ta-avatar" style="background:linear-gradient(135deg,#22c55e,#16a34a)">C</div>
+              CreeperBoy
+            </div>
+            <div class="thread-tags">
+              <span class="thread-tag green">✅ Решено</span>
+              <span class="thread-tag blue">1.20</span>
+            </div>
+          </div>
+        </div>
+        <div class="thread-stats">
+          <div class="t-stat"><b>8</b> Ответов</div>
+          <div class="t-stat"><b>347</b> Просм.</div>
+        </div>
+      </div>
+
+    </div><!-- /forum-main -->
+
+    <div class="forum-sidebar">
+      <div class="sec-label">О разделе</div>
+      <div class="side-card">
+        <div style="font-size:13px;color:var(--muted);line-height:1.7">
+          Свободное общение на любые темы, связанные с Minecraft и смежными играми.<br/><br/>
+          <span style="color:var(--white);font-weight:700">Модераторы:</span><br/>
+          <span style="color:var(--blue2)">DiamondSteve</span>, <span style="color:var(--green)">Admin</span>
+        </div>
+      </div>
+      <div class="sec-label" style="margin-top:8px">Горящие темы</div>
+      <div class="side-card">
+        <div class="activity-list">
+          <div class="activity-item" onclick="navigate('thread','2')">🔥 <b>Как вы познакомились с МК?</b> — 284 ответа</div>
+          <div class="activity-item" onclick="navigate('thread','5')">💬 <b>Minecraft vs Terraria</b> — 61 ответ</div>
+          <div class="activity-item" onclick="navigate('thread','3')">🗳 <b>Любимый биом 1.21</b> — 47 ответов</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     PAGE: THREAD VIEW
+═══════════════════════════════════════════════════ -->
+<div class="page" id="page-thread">
+  <nav class="navbar">
+    <div class="nav-inner">
+      <div class="nav-logo" onclick="navigate('forum')">
+        <div class="logo-icon">⛏</div>
+        <span><span class="logo-w">Mine</span><span class="logo-b">Board</span></span>
+      </div>
+      <div class="nav-search" onclick="openSearch()">
+        <svg class="search-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" placeholder="Поиск..." readonly/>
+      </div>
+      <div class="nav-right" id="navRightThread">
+        <button class="btn-login" onclick="navigate('login')">Войти</button>
+        <button class="btn-register" onclick="navigate('register')">Регистрация</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="breadcrumb">
+    <a onclick="navigate('forum')">🏠 Форум</a>
+    <span class="sep">›</span>
+    <a onclick="navigate('threads','general-chat')">Общий чат</a>
+    <span class="sep">›</span>
+    <span>Тема</span>
+  </div>
+
+  <div class="thread-page-layout">
+    <div class="thread-main">
+
+      <div class="thread-header">
+        <h1>Как вы познакомились с Minecraft? Большой опрос! 🎮</h1>
+        <div class="thread-header-meta">
+          <div class="thm-author">
+            <div class="avatar" style="background:linear-gradient(135deg,#1a6fff,#22c55e)">N</div>
+            <span onclick="navigate('profile','Notch_Fan')" style="cursor:pointer;color:var(--blue2)">Notch_Fan</span>
+          </div>
+          <span class="thm-sep">·</span>
+          <span class="thm-time">16 июня 2024, 14:32</span>
+          <span class="thm-sep">·</span>
+          <span class="thm-views">👁 8 471 просмотр</span>
+        </div>
+        <div class="thread-tags-row">
+          <span class="thread-tag orange">🔥 Горящее</span>
+          <span class="thread-tag green">Опрос</span>
+          <span class="thread-tag blue">Общение</span>
+        </div>
+      </div>
+
+      <!-- POSTS -->
+      <div id="postsContainer">
+
+        <!-- Post 1 -->
+        <div class="post">
+          <div class="post-inner">
+            <div class="post-author-col">
+              <div class="post-avatar" style="background:linear-gradient(135deg,#1a6fff,#22c55e)" onclick="navigate('profile','Notch_Fan')">N</div>
+              <div class="post-username" onclick="navigate('profile','Notch_Fan')">Notch_Fan</div>
+              <div class="post-role veteran">Ветеран</div>
+              <div class="post-stats-mini">Сообщений: <b>2 847</b><br/>Репутация: <b>+491</b></div>
+            </div>
+            <div class="post-content-col">
+              <div class="post-num">#1</div>
+              <div class="post-text">
+                <p>Привет всем! Давно хотел создать эту тему — расскажите, как вы впервые узнали о Minecraft и когда начали играть?</p>
+                <p>Я сам начал ещё в <code>Alpha 1.2.6</code> в 2010 году, увидел видео на YouTube у какого-то блогера. Скачал демку, и всё — затянуло на годы 😄</p>
+                <blockquote>Для тех кто не знает: Minecraft вышел официально в 2011 году, но альфа-версии были доступны с 2009-2010!</blockquote>
+                <p>Напишите год, версию и как узнали. Интересно собрать статистику!</p>
+              </div>
+              <div class="reaction-bar">
+                <span class="reaction">❤️ 47</span>
+                <span class="reaction">😄 23</span>
+                <span class="reaction">🤯 8</span>
+                <span class="reaction">👍 104</span>
+              </div>
+              <div class="post-footer">
+                <span class="post-time">16.06.2024, 14:32</span>
+                <button class="post-action">💬 Ответить</button>
+                <button class="post-action">🔗 Цитата</button>
+                <button class="post-action">👍 Лайк</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Post 2 -->
+        <div class="post">
+          <div class="post-inner">
+            <div class="post-author-col">
+              <div class="post-avatar" style="background:linear-gradient(135deg,#22c55e,#16a34a)" onclick="navigate('profile','CreeperBoy')">C</div>
+              <div class="post-username" onclick="navigate('profile','CreeperBoy')">CreeperBoy</div>
+              <div class="post-role">Участник</div>
+              <div class="post-stats-mini">Сообщений: <b>342</b><br/>Репутация: <b>+67</b></div>
+            </div>
+            <div class="post-content-col">
+              <div class="post-num">#2</div>
+              <div class="post-text">
+                <p>Я начал в 2013, тогда был бета-период. Старший брат показал — мы сначала в Creative строили всякую ерунду, потом перешли в Survival.</p>
+                <p>До сих пор помню первую ночь в игре — наткнулся на криппера и он взорвал весь мой первый домик из дерева 😂 С тех пор их ненавижу и одновременно люблю.</p>
+              </div>
+              <div class="reaction-bar">
+                <span class="reaction">😄 31</span>
+                <span class="reaction">❤️ 12</span>
+                <span class="reaction">🤣 19</span>
+              </div>
+              <div class="post-footer">
+                <span class="post-time">16.06.2024, 14:51</span>
+                <button class="post-action">💬 Ответить</button>
+                <button class="post-action">🔗 Цитата</button>
+                <button class="post-action">👍 Лайк</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Post 3 -->
+        <div class="post">
+          <div class="post-inner">
+            <div class="post-author-col">
+              <div class="post-avatar" style="background:linear-gradient(135deg,#38bdf8,#0ea5e9)" onclick="navigate('profile','DiamondSteve')">D</div>
+              <div class="post-username" onclick="navigate('profile','DiamondSteve')">DiamondSteve</div>
+              <div class="post-role mod">Модератор</div>
+              <div class="post-stats-mini">Сообщений: <b>8 201</b><br/>Репутация: <b>+2 047</b></div>
+            </div>
+            <div class="post-content-col">
+              <div class="post-num">#3</div>
+              <div class="post-text">
+                <p>Отличная тема! Я познакомился с игрой через <code>MineCraft Classic</code> прямо в браузере в 2009 году. Тогда ещё не было мобов, только строительство.</p>
+                <blockquote>CreeperBoy написал(а): До сих пор помню первую ночь в игре — наткнулся на криппера...</blockquote>
+                <p>Эта классика 😄 У каждого есть своя история с первым криппером. Моя первая ночь — я просто закопался под землю и сидел там до утра, не понимая механик игры!</p>
+              </div>
+              <div class="reaction-bar">
+                <span class="reaction">😄 54</span>
+                <span class="reaction">❤️ 28</span>
+                <span class="reaction">👍 41</span>
+              </div>
+              <div class="post-footer">
+                <span class="post-time">16.06.2024, 15:14</span>
+                <button class="post-action">💬 Ответить</button>
+                <button class="post-action">🔗 Цитата</button>
+                <button class="post-action">👍 Лайк</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /postsContainer -->
+
+      <!-- Reply box -->
+      <div class="reply-box" id="replyBox">
+        <h3>💬 Ответить в теме</h3>
+        <div class="reply-toolbar">
+          <button class="toolbar-btn"><b>B</b></button>
+          <button class="toolbar-btn"><i>I</i></button>
+          <button class="toolbar-btn"><u>U</u></button>
+          <button class="toolbar-btn">〈/〉</button>
+          <button class="toolbar-btn">❝ Цитата</button>
+          <button class="toolbar-btn">🖼</button>
+          <button class="toolbar-btn">🔗 URL</button>
+        </div>
+        <textarea class="reply-textarea" id="replyText" placeholder="Напишите ваш ответ... (минимум 10 символов)"></textarea>
+        <div class="reply-footer">
+          <span class="reply-hint">💡 Поддерживается базовая разметка форума</span>
+          <button class="btn-submit" onclick="submitReply()">Отправить ответ</button>
+        </div>
+      </div>
+      <div id="loginPrompt" class="side-card" style="text-align:center;display:none;margin-top:8px">
+        <p style="color:var(--muted);margin-bottom:12px">Войдите, чтобы ответить в теме</p>
+        <div style="display:flex;gap:10px;justify-content:center">
+          <button class="btn-login" onclick="navigate('login')" style="padding:9px 20px;border-radius:var(--r);font-size:14px;font-weight:700;cursor:pointer;border:1px solid var(--border2);color:var(--muted)">Войти</button>
+          <button class="btn-register" onclick="navigate('register')" style="padding:9px 20px;border-radius:var(--r);font-size:14px;font-weight:700;cursor:pointer">Зарегистрироваться</button>
+        </div>
+      </div>
+
+    </div><!-- /thread-main -->
+
+    <div class="thread-sidebar" style="position:sticky;top:80px;align-self:start">
+      <div class="sec-label">Участники темы</div>
+      <div class="side-card">
+        <div class="online-list">
+          <div class="online-user" onclick="navigate('profile','Notch_Fan')">
+            <div class="ou-avatar" style="background:linear-gradient(135deg,#1a6fff,#22c55e)">N</div>
+            <span class="ou-name">Notch_Fan</span>
+            <span class="ou-role" style="color:var(--yellow)">Ветеран</span>
+          </div>
+          <div class="online-user" onclick="navigate('profile','CreeperBoy')">
+            <div class="ou-avatar" style="background:linear-gradient(135deg,#22c55e,#16a34a)">C</div>
+            <span class="ou-name">CreeperBoy</span>
+          </div>
+          <div class="online-user" onclick="navigate('profile','DiamondSteve')">
+            <div class="ou-avatar" style="background:linear-gradient(135deg,#38bdf8,#0ea5e9)">D</div>
+            <span class="ou-name">DiamondSteve</span>
+            <span class="ou-role" style="color:var(--green)">Мод</span>
+          </div>
+        </div>
+      </div>
+      <div class="sec-label" style="margin-top:8px">Похожие темы</div>
+      <div class="side-card">
+        <div class="activity-list">
+          <div class="activity-item" onclick="navigate('thread','3')">💬 Ваш любимый биом в 1.21?</div>
+          <div class="activity-item" onclick="navigate('thread','4')">🎮 Ищу друзей для хардкора</div>
+          <div class="activity-item" onclick="navigate('thread','5')">⚔️ MC vs Terraria — что лучше?</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     PAGE: LOGIN
+═══════════════════════════════════════════════════ -->
+<div class="page" id="page-login">
+  <nav class="navbar">
+    <div class="nav-inner">
+      <div class="nav-logo" onclick="navigate('forum')">
+        <div class="logo-icon">⛏</div>
+        <span><span class="logo-w">Mine</span><span class="logo-b">Board</span></span>
+      </div>
+    </div>
+  </nav>
+  <div class="auth-bg">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <div class="logo-icon" style="width:44px;height:44px;background:var(--blue);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 0 20px var(--blue-glow)">⛏</div>
+        <span><span class="logo-w">Mine</span><span class="logo-b">Board</span></span>
+      </div>
+      <h2>С возвращением!</h2>
+      <p class="auth-sub">Войдите в свой аккаунт MineBoard</p>
+
+      <div class="form-group">
+        <label class="form-label">Никнейм или Email</label>
+        <input type="text" class="form-input" id="loginUsername" placeholder="DiamondSteve_2009"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Пароль</label>
+        <input type="password" class="form-input" id="loginPassword" placeholder="••••••••"/>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <label class="form-check">
+          <input type="checkbox"/> Запомнить меня
+        </label>
+        <a style="font-size:13px;color:var(--blue2);cursor:pointer">Забыли пароль?</a>
+      </div>
+      <button class="btn-full" onclick="doLogin()">Войти</button>
+      <div id="loginError" style="color:var(--red);font-size:13px;text-align:center;margin-top:10px;display:none">Неверный никнейм или пароль</div>
+
+      <div class="auth-divider">или</div>
+      <div class="auth-switch">
+        Нет аккаунта? <a onclick="navigate('register')">Зарегистрироваться</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     PAGE: REGISTER
+═══════════════════════════════════════════════════ -->
+<div class="page" id="page-register">
+  <nav class="navbar">
+    <div class="nav-inner">
+      <div class="nav-logo" onclick="navigate('forum')">
+        <div class="logo-icon">⛏</div>
+        <span><span class="logo-w">Mine</span><span class="logo-b">Board</span></span>
+      </div>
+    </div>
+  </nav>
+  <div class="auth-bg">
+    <div class="auth-card" style="max-width:500px">
+      <div class="auth-logo">
+        <div class="logo-icon" style="width:44px;height:44px;background:var(--blue);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 0 20px var(--blue-glow)">⛏</div>
+        <span><span class="logo-w">Mine</span><span class="logo-b">Board</span></span>
+      </div>
+      <h2>Создать аккаунт</h2>
+      <p class="auth-sub">Присоединяйся к 12 000+ игроков на MineBoard</p>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Никнейм</label>
+          <input type="text" class="form-input" id="regUsername" placeholder="CoolMiner_2024"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Minecraft ник</label>
+          <input type="text" class="form-input" id="regMcNick" placeholder="Steve"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" id="regEmail" placeholder="player@gmail.com"/>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Пароль</label>
+          <input type="password" class="form-input" id="regPassword" placeholder="••••••••"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Подтвердить</label>
+          <input type="password" class="form-input" id="regPassword2" placeholder="••••••••"/>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Выбери аватар</label>
+        <div class="avatar-picker" id="avatarPicker">
+          <div class="avatar-opt selected" style="background:linear-gradient(135deg,#1a6fff,#22c55e)" data-idx="0" onclick="selectAvatar(0)">⚔</div>
+          <div class="avatar-opt" style="background:linear-gradient(135deg,#22c55e,#16a34a)" data-idx="1" onclick="selectAvatar(1)">🌿</div>
+          <div class="avatar-opt" style="background:linear-gradient(135deg,#f97316,#ea580c)" data-idx="2" onclick="selectAvatar(2)">🔥</div>
+          <div class="avatar-opt" style="background:linear-gradient(135deg,#38bdf8,#0ea5e9)" data-idx="3" onclick="selectAvatar(3)">💎</div>
+          <div class="avatar-opt" style="background:linear-gradient(135deg,#a855f7,#7c3aed)" data-idx="4" onclick="selectAvatar(4)">✨</div>
+          <div class="avatar-opt" style="background:linear-gradient(135deg,#eab308,#ca8a04)" data-idx="5" onclick="selectAvatar(5)">⭐</div>
+        </div>
+      </div>
+
+      <label class="form-check" style="margin-bottom:14px">
+        <input type="checkbox" id="regAgree"/> Я принимаю <a style="color:var(--blue2);cursor:pointer">правила форума</a>
+      </label>
+
+      <button class="btn-full" onclick="doRegister()">Создать аккаунт</button>
+      <div id="regError" style="color:var(--red);font-size:13px;text-align:center;margin-top:10px;display:none"></div>
+
+      <div class="auth-switch" style="margin-top:16px">
+        Уже есть аккаунт? <a onclick="navigate('login')">Войти</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     PAGE: PROFILE
+═══════════════════════════════════════════════════ -->
+<div class="page" id="page-profile">
+  <nav class="navbar">
+    <div class="nav-inner">
+      <div class="nav-logo" onclick="navigate('forum')">
+        <div class="logo-icon">⛏</div>
+        <span><span class="logo-w">Mine</span><span class="logo-b">Board</span></span>
+      </div>
+      <div class="nav-right" id="navRightProfile">
+        <button class="btn-login" onclick="navigate('login')">Войти</button>
+        <button class="btn-register" onclick="navigate('register')">Регистрация</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="profile-page">
+    <div class="profile-header" id="profileHeader">
+      <div class="profile-avatar-big" id="profileAvatar" style="background:linear-gradient(135deg,#1a6fff,#22c55e)">N</div>
+      <div class="profile-info">
+        <div class="profile-username" id="profileUsername">Notch_Fan</div>
+        <div class="profile-role-row">
+          <span class="post-role veteran" id="profileRole">Ветеран</span>
+          <span style="font-size:13px;color:var(--muted)">Minecraft ник: <b style="color:var(--white)" id="profileMcNick">Notch_Fan_MC</b></span>
+        </div>
+        <div class="profile-bio" id="profileBio">Играю в Minecraft с 2010 года. Люблю ванильное выживание и технические моды. Строю редстоун-машины и автофермы.</div>
+        <div class="profile-joined" id="profileJoined">📅 Зарегистрирован: 12 марта 2020 · Последний визит: сегодня</div>
+        <div class="profile-stats-row">
+          <div class="pstat"><div class="pstat-val" style="color:var(--blue2)" id="pStatPosts">2 847</div><div class="pstat-lbl">Сообщений</div></div>
+          <div class="pstat"><div class="pstat-val" style="color:var(--green)" id="pStatRep">+491</div><div class="pstat-lbl">Репутация</div></div>
+          <div class="pstat"><div class="pstat-val" id="pStatThreads">184</div><div class="pstat-lbl">Тем создано</div></div>
+          <div class="pstat"><div class="pstat-val" id="pStatLikes">1 204</div><div class="pstat-lbl">Лайков получено</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-grid">
+      <div>
+        <div class="ptabs">
+          <div class="ptab active" onclick="switchTab(this,'tab-posts')">Сообщения</div>
+          <div class="ptab" onclick="switchTab(this,'tab-threads')">Темы</div>
+          <div class="ptab" onclick="switchTab(this,'tab-badges')">Значки</div>
+          <div class="ptab" onclick="switchTab(this,'tab-about')">О себе</div>
+        </div>
+
+        <div id="tab-posts">
+          <div class="thread-row" onclick="navigate('thread','2')">
+            <div class="thread-status">💬</div>
+            <div class="thread-body">
+              <div class="thread-title">Ответ в «Как вы познакомились с МК?»</div>
+              <div class="thread-meta"><span class="thread-author">Общий чат · 5 мин назад</span></div>
+            </div>
+          </div>
+          <div class="thread-row" onclick="navigate('thread','3')">
+            <div class="thread-status">💬</div>
+            <div class="thread-body">
+              <div class="thread-title">Ответ в «Обсуждение OptiFine 1.21.1»</div>
+              <div class="thread-meta"><span class="thread-author">Помощь · 2 дня назад</span></div>
+            </div>
+          </div>
+          <div class="thread-row" onclick="navigate('thread','4')">
+            <div class="thread-status">💬</div>
+            <div class="thread-body">
+              <div class="thread-title">Ответ в «Лучшие техно-моды для 1.20»</div>
+              <div class="thread-meta"><span class="thread-author">Моды · 5 дней назад</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="tab-threads" style="display:none">
+          <div class="thread-row" onclick="navigate('thread','2')">
+            <div class="thread-status">🔥</div>
+            <div class="thread-body">
+              <div class="thread-title">Как вы познакомились с Minecraft? Большой опрос!</div>
+              <div class="thread-meta"><span class="thread-author">Общий чат · 284 ответа</span></div>
+            </div>
+          </div>
+          <div class="thread-row">
+            <div class="thread-status">💬</div>
+            <div class="thread-body">
+              <div class="thread-title">Гайд по оптимизации Minecraft 2024</div>
+              <div class="thread-meta"><span class="thread-author">Оптимизация · 47 ответов</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="tab-badges" style="display:none">
+          <div class="badges-grid">
+            <div class="badge-item" title="Первое сообщение">
+              <div class="badge-ico">💬</div>
+              <div class="badge-name">Первое слово</div>
+            </div>
+            <div class="badge-item" title="100 сообщений">
+              <div class="badge-ico">📝</div>
+              <div class="badge-name">Активист</div>
+            </div>
+            <div class="badge-item" title="1000 сообщений">
+              <div class="badge-ico">🏆</div>
+              <div class="badge-name">Ветеран</div>
+            </div>
+            <div class="badge-item" title="Помог 50 людям">
+              <div class="badge-ico">🤝</div>
+              <div class="badge-name">Помощник</div>
+            </div>
+            <div class="badge-item" title="Зарегистрирован более 3 лет">
+              <div class="badge-ico">⭐</div>
+              <div class="badge-name">Старожил</div>
+            </div>
+            <div class="badge-item" title="Создал популярную тему">
+              <div class="badge-ico">🔥</div>
+              <div class="badge-name">Вирус</div>
+            </div>
+            <div class="badge-item" title="Получил 500 лайков">
+              <div class="badge-ico">❤️</div>
+              <div class="badge-name">Любимчик</div>
+            </div>
+            <div class="badge-item" title="Первый донат">
+              <div class="badge-ico">💎</div>
+              <div class="badge-name">Спонсор</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="tab-about" style="display:none">
+          <div class="side-card" style="margin-top:0">
+            <div style="font-size:14px;color:var(--muted);line-height:1.8">
+              <p style="margin-bottom:12px">Играю в Minecraft с 2010 года. Застал ещё альфа-версии, помню время когда не было голода и криперов 😄</p>
+              <p style="margin-bottom:12px">Специализируюсь на техническом Minecraft — редстоун, автофермы, транспортные системы. Могу часами строить оптимальную ферму пшеницы.</p>
+              <p>Любимые моды: <span style="color:var(--blue2)">Create</span>, <span style="color:var(--blue2)">Applied Energistics 2</span>, <span style="color:var(--blue2)">Mekanism</span></p>
+            </div>
+            <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px">
+              <div style="font-size:13px;color:var(--muted)">🎮 Играет в версии: <b style="color:var(--white)">1.20.4, 1.21</b></div>
+              <div style="font-size:13px;color:var(--muted)">🌍 Страна: <b style="color:var(--white)">Россия</b></div>
+              <div style="font-size:13px;color:var(--muted)">⏰ Часовой пояс: <b style="color:var(--white)">UTC+3 (Москва)</b></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="sec-label">Статистика</div>
+        <div class="side-card">
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:13px;color:var(--muted)">Сообщений в день</span>
+              <b style="font-size:14px">~2.4</b>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:13px;color:var(--muted)">На форуме</span>
+              <b style="font-size:14px">4 года</b>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:13px;color:var(--muted)">Позиция в рейтинге</span>
+              <b style="font-size:14px;color:var(--yellow)">#47</b>
+            </div>
+            <div style="height:1px;background:var(--border)"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:13px;color:var(--muted)">Уровень активности</span>
+              <div>
+                <div style="height:6px;width:120px;background:var(--bg3);border-radius:3px;overflow:hidden">
+                  <div style="height:100%;width:78%;background:linear-gradient(90deg,var(--blue),var(--blue2));border-radius:3px"></div>
+                </div>
+                <span style="font-size:11px;color:var(--muted2)">78% · Ветеран</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════════════ -->
+<script>
+// ── STATE ────────────────────────────────────────
+const avatarGradients = [
+  'linear-gradient(135deg,#1a6fff,#22c55e)',
+  'linear-gradient(135deg,#22c55e,#16a34a)',
+  'linear-gradient(135deg,#f97316,#ea580c)',
+  'linear-gradient(135deg,#38bdf8,#0ea5e9)',
+  'linear-gradient(135deg,#a855f7,#7c3aed)',
+  'linear-gradient(135deg,#eab308,#ca8a04)',
+];
+
+let state = {
+  user: null,          // null = гость
+  currentPage: 'forum',
+  selectedAvatar: 0,
+};
+
+// Demo users
+const demoUsers = {
+  'admin': { password:'admin', username:'Admin', role:'admin', avatar:2, posts:10241, rep:5420 },
+  'notch_fan': { password:'1234', username:'Notch_Fan', role:'veteran', avatar:0, posts:2847, rep:491 },
+  'diamond': { password:'1234', username:'DiamondSteve', role:'mod', avatar:3, posts:8201, rep:2047 },
+};
+
+// ── NAVIGATION ───────────────────────────────────
+function navigate(page, param) {
+  // hide all pages
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  state.currentPage = page;
+  window.scrollTo(0,0);
+
+  // update navbar in each page
+  updateNavbars();
+
+  if (page === 'threads' && param) {
+    const titles = {
+      'general-chat': ['Общий чат', '4 218 тем · 38 104 сообщений'],
+      'introductions': ['Знакомства', '1 092 темы · 9 847 сообщений'],
+      'memes': ['Мемы и юмор', '3 111 тем · 19 351 сообщений'],
+      'help': ['Помощь и поддержка', '6 847 тем · 52 014 сообщений'],
+      'optimization': ['Оптимизация и графика', '3 291 тема · 24 817 сообщений'],
+      'bugs': ['Баги и ошибки', '1 946 тем · 12 580 сообщений'],
+      'mods': ['Обсуждение модов', '5 124 темы · 41 307 сообщений'],
+      'modpacks': ['Сборки и модпаки', '2 847 тем · 22 419 сообщений'],
+      'resources': ['Ресурспаки и текстуры', '1 346 тем · 11 094 сообщений'],
+      'servers': ['Реклама серверов', '4 102 темы · 31 847 сообщений'],
+      'admin': ['Администрирование', '2 102 темы · 23 054 сообщений'],
+      'screenshots': ['Скриншоты и постройки', '3 418 тем · 28 104 сообщений'],
+      'videos': ['Видео и стримы', '1 401 тема · 9 913 сообщений'],
+    };
+    const data = titles[param] || ['Раздел', ''];
+    document.getElementById('threadListTitle').textContent = data[0];
+    document.getElementById('threadListDesc').textContent = data[1];
+    document.getElementById('breadcrumbCat').textContent = data[0];
+  }
+
+  if (page === 'thread') {
+    // Show/hide reply box based on auth
+    const rb = document.getElementById('replyBox');
+    const lp = document.getElementById('loginPrompt');
+    if (state.user) { rb.style.display=''; lp.style.display='none'; }
+    else { rb.style.display='none'; lp.style.display=''; }
+  }
+
+  if (page === 'profile' && param) {
+    loadProfile(param);
+  } else if (page === 'profile' && state.user) {
+    loadProfile(state.user.username);
+  }
+}
+
+function updateNavbars() {
+  const navIds = ['navRight','navRightThreads','navRightThread','navRightProfile'];
+  navIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (state.user) {
+      el.innerHTML = `
+        <div class="nav-user" onclick="toggleDropdown(this)" style="position:relative">
+          <div class="uavatar" style="background:${avatarGradients[state.user.avatar]}">${state.user.username.charAt(0).toUpperCase()}</div>
+          <span class="uname">${state.user.username}</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.4"><path d="m6 9 6 6 6-6"/></svg>
+          <div class="dropdown" id="dd-${id}">
+            <div class="dd-item" onclick="navigate('profile')">👤 Мой профиль</div>
+            <div class="dd-item" onclick="navigate('forum')">✏️ Мои темы</div>
+            <div class="dd-sep"></div>
+            <div class="dd-item" onclick="navigate('forum')">⚙️ Настройки</div>
+            <div class="dd-item danger" onclick="doLogout()">🚪 Выйти</div>
+          </div>
+        </div>`;
+    } else {
+      el.innerHTML = `
+        <button class="btn-login" onclick="navigate('login')">Войти</button>
+        <button class="btn-register" onclick="navigate('register')">Регистрация</button>`;
+    }
+  });
+}
+
+function toggleDropdown(el) {
+  const dd = el.querySelector('.dropdown');
+  dd.classList.toggle('open');
+  document.addEventListener('click', function close(e){
+    if (!el.contains(e.target)) { dd.classList.remove('open'); document.removeEventListener('click',close); }
+  }, {once:false});
+}
+
+// ── AUTH ─────────────────────────────────────────
+function doLogin() {
+  const u = document.getElementById('loginUsername').value.trim().toLowerCase();
+  const p = document.getElementById('loginPassword').value;
+  const err = document.getElementById('loginError');
+
+  const found = demoUsers[u];
+  if (found && found.password === p) {
+    state.user = { username: found.username, role: found.role, avatar: found.avatar, posts: found.posts, rep: found.rep };
+    err.style.display = 'none';
+    navigate('forum');
+  } else if (u.length >= 3 && p.length >= 4) {
+    // Accept any user with valid-ish credentials
+    state.user = { username: u.charAt(0).toUpperCase() + u.slice(1), role:'member', avatar: state.selectedAvatar, posts:0, rep:0 };
+    err.style.display = 'none';
+    navigate('forum');
+  } else {
+    err.style.display = 'block';
+  }
+}
+
+function doRegister() {
+  const u = document.getElementById('regUsername').value.trim();
+  const e = document.getElementById('regEmail').value.trim();
+  const p = document.getElementById('regPassword').value;
+  const p2 = document.getElementById('regPassword2').value;
+  const agree = document.getElementById('regAgree').checked;
+  const err = document.getElementById('regError');
+
+  if (!u || u.length < 3) { showError(err, 'Никнейм должен быть не менее 3 символов'); return; }
+  if (!e || !e.includes('@')) { showError(err, 'Введите корректный email'); return; }
+  if (p.length < 6) { showError(err, 'Пароль должен быть не менее 6 символов'); return; }
+  if (p !== p2) { showError(err, 'Пароли не совпадают'); return; }
+  if (!agree) { showError(err, 'Необходимо принять правила форума'); return; }
+
+  state.user = { username: u, role:'newbie', avatar: state.selectedAvatar, posts:0, rep:0 };
+  err.style.display = 'none';
+  navigate('forum');
+}
+
+function doLogout() {
+  state.user = null;
+  navigate('forum');
+}
+
+function showError(el, msg) {
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function requireAuth(cb) {
+  if (state.user) cb();
+  else navigate('login');
+}
+
+// ── PROFILE ──────────────────────────────────────
+const profileData = {
+  'Notch_Fan': { avatar:0, role:'veteran', roleLabel:'Ветеран', mc:'Notch_Fan_MC', bio:'Играю в Minecraft с 2010 года. Люблю ванильное выживание и технические моды. Строю редстоун-машины и автофермы.', joined:'12 марта 2020', posts:2847, rep:491, threads:184, likes:1204 },
+  'CreeperBoy': { avatar:1, role:'member', roleLabel:'Участник', mc:'CreeperBoy99', bio:'Люблю PvP и SkyWars. Часами играю на серверах с друзьями.', joined:'3 сентября 2021', posts:342, rep:67, threads:28, likes:104 },
+  'DiamondSteve': { avatar:3, role:'mod', roleLabel:'Модератор', mc:'DiamondSteve', bio:'Модератор форума с 2022 года. Помогаю новичкам и слежу за порядком. В игре строю огромные города.', joined:'7 января 2019', posts:8201, rep:2047, threads:412, likes:4801 },
+  'BuildKing': { avatar:2, role:'member', roleLabel:'Участник', mc:'BuildKing_MC', bio:'Строю в Minecraft всё что только можно. Мой замок занял 3 месяца реального времени!', joined:'20 апреля 2022', posts:891, rep:312, threads:74, likes:847 },
+  'GPU_Lord': { avatar:4, role:'member', roleLabel:'Участник', mc:'GPU_Lord', bio:'Занимаюсь оптимизацией и графикой. Тестирую шейдеры и ресурспаки.', joined:'15 ноября 2021', posts:1241, rep:208, threads:91, likes:512 },
+};
+
+function loadProfile(username) {
+  const d = profileData[username] || {
+    avatar: state.user?.avatar || 0,
+    role: state.user?.role || 'member',
+    roleLabel: 'Новичок',
+    mc: username,
+    bio: 'Новый участник форума MineBoard.',
+    joined: new Date().toLocaleDateString('ru'),
+    posts: state.user?.posts || 0,
+    rep: state.user?.rep || 0,
+    threads: 0, likes: 0
+  };
+
+  document.getElementById('profileAvatar').style.background = avatarGradients[d.avatar];
+  document.getElementById('profileAvatar').textContent = username.charAt(0).toUpperCase();
+  document.getElementById('profileUsername').textContent = username;
+  document.getElementById('profileMcNick').textContent = d.mc;
+  document.getElementById('profileBio').textContent = d.bio;
+  document.getElementById('profileJoined').textContent = '📅 Зарегистрирован: ' + d.joined + ' · Последний визит: сегодня';
+  document.getElementById('pStatPosts').textContent = d.posts.toLocaleString('ru');
+  document.getElementById('pStatRep').textContent = '+' + d.rep;
+  document.getElementById('pStatThreads').textContent = d.threads;
+  document.getElementById('pStatLikes').textContent = d.likes.toLocaleString('ru');
+
+  const roleEl = document.getElementById('profileRole');
+  roleEl.textContent = d.roleLabel;
+  roleEl.className = 'post-role ' + (d.role === 'veteran' ? 'veteran' : d.role === 'mod' ? 'mod' : d.role === 'admin' ? 'admin' : '');
+}
+
+// ── AVATAR PICKER ─────────────────────────────────
+function selectAvatar(idx) {
+  state.selectedAvatar = idx;
+  document.querySelectorAll('.avatar-opt').forEach(el => el.classList.remove('selected'));
+  document.querySelector(`.avatar-opt[data-idx="${idx}"]`).classList.add('selected');
+}
+
+// ── PROFILE TABS ─────────────────────────────────
+function switchTab(tabEl, tabId) {
+  document.querySelectorAll('.ptab').forEach(t => t.classList.remove('active'));
+  tabEl.classList.add('active');
+  ['tab-posts','tab-threads','tab-badges','tab-about'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = id === tabId ? '' : 'none';
+  });
+}
+
+// ── SEARCH ───────────────────────────────────────
+function openSearch() {
+  const ov = document.getElementById('searchOverlay');
+  ov.classList.add('active');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('searchInputBig')?.focus(), 200);
+}
+
+function closeSearch() {
+  document.getElementById('searchOverlay').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function fillSearch(el) {
+  document.getElementById('searchInputBig').value = el.querySelector('span').textContent;
+  document.getElementById('searchInputBig').focus();
+}
+
+document.getElementById('searchClose').addEventListener('click', closeSearch);
+document.getElementById('searchBd').addEventListener('click', closeSearch);
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeSearch();
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); openSearch(); }
+});
+
+// ── MODALS ───────────────────────────────────────
+function openModal(id) {
+  document.getElementById(id).classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active');
+  document.body.style.overflow = '';
+}
+// Close modal on backdrop click
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) closeModal(el.id); });
+});
+
+// ── REPLIES ──────────────────────────────────────
+function submitReply() {
+  if (!state.user) { navigate('login'); return; }
+  const text = document.getElementById('replyText').value.trim();
+  if (text.length < 10) { alert('Сообщение должно быть не менее 10 символов'); return; }
+
+  const container = document.getElementById('postsContainer');
+  const num = container.querySelectorAll('.post').length + 1;
+  const grad = avatarGradients[state.user.avatar];
+
+  const post = document.createElement('div');
+  post.className = 'post';
+  post.style.animation = 'fadeUp .3s ease both';
+  post.innerHTML = `
+    <div class="post-inner">
+      <div class="post-author-col">
+        <div class="post-avatar" style="background:${grad}">${state.user.username.charAt(0).toUpperCase()}</div>
+        <div class="post-username">${state.user.username}</div>
+        <div class="post-role">${state.user.role === 'veteran' ? 'Ветеран' : state.user.role === 'mod' ? 'Модератор' : 'Участник'}</div>
+        <div class="post-stats-mini">Сообщений: <b>${state.user.posts + num}</b></div>
+      </div>
+      <div class="post-content-col">
+        <div class="post-num">#${num}</div>
+        <div class="post-text"><p>${text.replace(/\n/g,'<br/>')}</p></div>
+        <div class="post-footer">
+          <span class="post-time">${new Date().toLocaleString('ru',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
+          <button class="post-action">💬 Ответить</button>
+          <button class="post-action">👍 Лайк</button>
+        </div>
+      </div>
+    </div>`;
+  container.appendChild(post);
+  document.getElementById('replyText').value = '';
+  post.scrollIntoView({behavior:'smooth', block:'center'});
+}
+
+function submitNewThread() {
+  const title = document.getElementById('newThreadTitle').value.trim();
+  if (!title) { alert('Введите заголовок темы'); return; }
+  closeModal('newThreadModal');
+  navigate('thread','new');
+  document.querySelector('.thread-header h1').textContent = title;
+}
+
+// ── INIT ─────────────────────────────────────────
+updateNavbars();
+</script>
+</body>
+</html>
